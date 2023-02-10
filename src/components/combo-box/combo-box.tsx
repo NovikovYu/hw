@@ -1,12 +1,24 @@
-import { createContext, createRef, useState } from 'react';
+import {
+  // createContext,
+  createRef,
+  // JSXElementConstructor,
+  // Key,
+  // ReactElement,
+  // ReactFragment,
+  useState
+} from 'react';
 import classNames from 'classnames/bind';
 
 import classes from './combo-box.module.scss';
+// import React from 'react';
 
 let cx = classNames.bind(classes);
-const inputRef = createRef();
+const inputRef = createRef<HTMLInputElement>();
 
-export function ComboBox(props) {
+export function ComboBox(props: {
+  defaultValue: string;
+  options: Array<string>;
+}) {
   const [inputValue, setInputValue] = useState(
     props.defaultValue ? props.defaultValue : ''
   );
@@ -16,21 +28,21 @@ export function ComboBox(props) {
   );
 
   // контролиреум инпут
-  const changeInputValue = (e) => {
+  const changeInputValue = (e: { target: { value: string } }) => {
     setInputValue(e.target.value);
     filterOptionsList(e.target.value);
   };
 
   // подверждаем выбор при клике Enter
-  const onSubmit = (e) => {
+  const onSubmit = (e: { code: string }) => {
     if (e.code === 'Enter') {
       // мы снимаем фокус с инпута и его содержимое автоматически считается финальным выбором
-      inputRef.current.blur();
+      inputRef.current?.blur();
     }
   };
 
   // фильтруем список
-  const filterOptionsList = (str) => {
+  const filterOptionsList = (str: string) => {
     let newArr = [...props.options];
 
     newArr = newArr.filter((el) => {
@@ -45,12 +57,16 @@ export function ComboBox(props) {
     });
 
     setActualOptions(newArr);
+
+    if (newArr.length == 0) {
+      setIsListOpen(false);
+    } else {
+      setIsListOpen(true);
+    }
   };
 
   //выбриаем опцию при клике в неё
-  const selectOption = (el) => {
-    console.log('el', el);
-
+  const selectOption = (el: string) => {
     setInputValue(el);
 
     setIsListOpen(false);
@@ -69,18 +85,18 @@ export function ComboBox(props) {
     // глобально подтверждаем выбор опции
     submitOptionSelection(inputValue);
 
-    // закидываем в конец очерди, чтобы выбор опиции успел отработать
     setIsListOpen(false);
   };
 
   //собираем список опций
-  const optionsList = actualOptions.map((el) => {
+  const optionsList = actualOptions.map((el: string) => {
     return (
       <li
         className={classes['combo-box__li']}
         key={el}
-        onClick={() => selectOption(el)}
-        // onClick={() => console.log(el)}
+        //блюр сработает до клика, поэтому обрабатываем нажатие / тыкание
+        onMouseDown={() => selectOption(el)}
+        onPointerDown={() => selectOption(el)}
       >
         {el}
       </li>
@@ -88,8 +104,8 @@ export function ComboBox(props) {
   });
 
   //делаем что-что, что должно делаться, при выборе опции
-  const submitOptionSelection = (option) => {
-    if (option != '') {
+  const submitOptionSelection = (option: string) => {
+    if (option != '' && option != inputValue) {
       console.log('мы выбрали', option);
     }
   };
@@ -103,28 +119,30 @@ export function ComboBox(props) {
   return (
     <>
       <div className={comboBoxStyles}>
+        <ul className={classes['combo-box__list']}>{optionsList}</ul>
+
         <input
           ref={inputRef}
           onFocus={openList}
-          onBlur={() => {
-            setTimeout(() => {
-              closeList();
-            }, 100);
-          }}
+          onBlur={closeList}
           onKeyDown={onSubmit}
           value={inputValue}
           onChange={changeInputValue}
           className={classes['combo-box__input']}
           placeholder="Movie"
         />
-
-        <ul className={classes['combo-box__list']}>{optionsList}</ul>
       </div>
       <p>
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Animi eum quis
         molestiae fugiat repellendus aliquid quisquam fuga. Soluta nesciunt
         dignissimos explicabo, temporibus et dicta laudantium porro, molestias
-        eum fugit ullam.
+        eum fugit ullam. Lorem ipsum dolor sit amet consectetur adipisicing
+        elit. Animi eum quis molestiae fugiat repellendus aliquid quisquam fuga.
+        Soluta nesciunt dignissimos explicabo, temporibus et dicta laudantium
+        porro, molestias eum fugit ullam. Lorem ipsum dolor sit amet consectetur
+        adipisicing elit. Animi eum quis molestiae fugiat repellendus aliquid
+        quisquam fuga. Soluta nesciunt dignissimos explicabo, temporibus et
+        dicta laudantium porro, molestias eum fugit ullam.
       </p>
     </>
   );
